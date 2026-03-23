@@ -20,6 +20,9 @@ const config: Config = {
   },
   moduleNameMapper: {
     "^@line/bot-sdk$": "<rootDir>/src/__tests__/__mocks__/line.ts",
+    "^@google/generative-ai$": "<rootDir>/src/__tests__/__mocks__/google.ts",
+    "^../db/prisma$": "<rootDir>/src/__tests__/__mocks__/prisma.ts",
+    "^../../db/prisma$": "<rootDir>/src/__tests__/__mocks__/prisma.ts",
   },
 };
 
