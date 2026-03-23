@@ -3,6 +3,7 @@ import { AIProvider } from "./types";
 // import { AnthropicProvider } from "./anthropic";
 // import { OpenAIProvider } from "./openai";
 import { GoogleProvider } from "./google";
+import { parseFallback } from "./fallback";
 import { logger } from "../utils/logger";
 import { ParsedExpense } from "../types";
 
@@ -34,5 +35,12 @@ const aiProvider = createAIProvider();
 
 // Export function เดิม — ส่วนอื่นของ codebase ไม่ต้องแก้อะไรเลย
 export async function parseExpenseMessage(text: string): Promise<ParsedExpense> {
-  return aiProvider.parseExpense(text);
+  try {
+    return await aiProvider.parseExpense(text);
+  } catch (err) {
+    logger.warn("AI provider failed, using fallback parser", { 
+      error: (err as Error).message 
+    });
+    return parseFallback(text);
+  }
 }

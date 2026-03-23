@@ -16,10 +16,7 @@ export class GoogleProvider implements AIProvider {
     logger.debug("Using Google Gemini provider");
     try {
       const model = this.client.getGenerativeModel({
-        model: "gemini-pro",
-        generationConfig: {
-          responseMimeType: "application/json",
-        },
+        model: "gemini-1.5-pro",
       });
 
       const prompt = `${SYSTEM_PROMPT}\n\nUser message: ${text}`;

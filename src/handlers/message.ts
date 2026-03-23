@@ -41,7 +41,7 @@ const COMMANDS = {
   HELP: ["help", "ช่วยด้วย", "วิธีใช้"],
 };
 
-const HELP_TEXT = `วิธีใช้ป้านวล 📖
+const HELP_TEXT = `วิธีใช้Expense-Bot 📖
 
 💸 บันทึกรายจ่าย:
   "กินข้าว 120"
@@ -150,7 +150,7 @@ async function processMessage(
   if (parsed.type === "UNKNOWN" || !parsed.amount) {
     return replyText(
       replyToken,
-      `ป้านวลไม่เข้าใจค่ะ 🙏\nลองพิมพ์ใหม่ เช่น "กินข้าว 120"\nหรือพิมพ์ "วิธีใช้" เพื่อดูคำแนะนำค่ะ`
+      `Expense-Botไม่เข้าใจค่ะ 🙏\nลองพิมพ์ใหม่ เช่น "กินข้าว 120"\nหรือพิมพ์ "วิธีใช้" เพื่อดูคำแนะนำค่ะ`
     );
   }
 
