@@ -1,0 +1,39 @@
+import { Request, Response, NextFunction } from "express";
+import crypto from "crypto";
+import { config } from "../config";
+import { UnauthorizedError } from "../utils/errors";
+import { logger } from "../utils/logger";
+
+export function verifyLineSignature(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  const signature = req.headers["x-line-signature"] as string;
+
+  if (!signature) {
+    logger.warn("Missing LINE signature", { ip: req.ip });
+    return next(new UnauthorizedError("Missing LINE signature"));
+  }
+
+  const body = JSON.stringify(req.body);
+  const expectedSignature = crypto
+    .createHmac("sha256", config.LINE_CHANNEL_SECRET)
+    .update(body)
+    .digest("base64");
+
+  // timingSafeEqual ป้องกัน timing attack
+  const sigBuffer = Buffer.from(signature);
+  const expectedBuffer = Buffer.from(expectedSignature);
+
+  const isValid =
+    sigBuffer.length === expectedBuffer.length &&
+    crypto.timingSafeEqual(sigBuffer, expectedBuffer);
+
+  if (!isValid) {
+    logger.warn("Invalid LINE signature", { ip: req.ip });
+    return next(new UnauthorizedError("Invalid LINE signature"));
+  }
+
+  next();
+}
