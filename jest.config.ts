@@ -19,7 +19,6 @@ const config: Config = {
     },
   },
   moduleNameMapper: {
-    "^@anthropic-ai/sdk$": "<rootDir>/src/__tests__/__mocks__/anthropic.ts",
     "^@line/bot-sdk$": "<rootDir>/src/__tests__/__mocks__/line.ts",
   },
 };
