@@ -11,7 +11,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio",
+    "prisma:studio": "source .env && npx prisma studio --url=\"$DATABASE_URL\"",
     "prepare": "husky",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,md}\""
   },
