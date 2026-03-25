@@ -116,10 +116,12 @@ export async function webhookHandler(req: Request, res: Response) {
             logger.error("Failed to process image", {
               error: (err as Error).message,
             });
-            await replyText(
-              replyToken,
-              "เกิดข้อผิดพลาดในการอ่านสลิปค่ะ ลองใหม่อีกครั้งนะคะ 🙏"
-            ).catch(() => {});
+            await lineClient
+              .pushMessage(userId, {
+                type: "text",
+                text: "เกิดข้อผิดพลาดในการอ่านสลิปค่ะ ลองใหม่อีกครั้งนะคะ 🙏",
+              })
+              .catch(() => {});
           }
         );
         return;
@@ -213,7 +215,7 @@ async function handleImageMessage(
   if (!ocrResult.success || !ocrResult.amount) {
     await lineClient.pushMessage(userId, {
       type: "text",
-      text: "ป้านวลอ่านสลิปไม่ออกค่ะ 😅\nลองถ่ายใหม่ให้ชัดขึ้น หรือพิมพ์ข้อมูลเองได้เลยนะคะ",
+      text: "Expense-Botอ่านสลิปไม่ออกค่ะ 😅\nลองถ่ายใหม่ให้ชัดขึ้น หรือพิมพ์ข้อมูลเองได้เลยนะคะ",
     });
     return;
   }

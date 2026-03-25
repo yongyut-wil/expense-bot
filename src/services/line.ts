@@ -65,86 +65,84 @@ export async function sendOcrConfirmMessage(
 
   const typeText = ocr.type === "INCOME" ? "💰 รายรับ" : "💸 รายจ่าย";
 
-  try {
-    // ใช้ pushMessage เพราะ replyToken ถูกใช้ไปแล้วตอนตอบ "กำลังอ่านสลิป"
-    await lineClient.pushMessage(userId, {
-      type: "flex",
-      altText: `ยืนยันการบันทึก ${ocr.amount?.toLocaleString()} บาท?`,
-      contents: {
-        type: "bubble",
-        header: {
-          type: "box",
-          layout: "vertical",
-          backgroundColor: "#27ACB2",
-          paddingAll: "md",
-          contents: [
-            {
-              type: "text",
-              text: "📋 ตรวจสอบข้อมูลจากสลิป",
-              weight: "bold",
-              color: "#ffffff",
-              size: "md",
-            },
-          ],
-        },
-        body: {
-          type: "box",
-          layout: "vertical",
-          spacing: "sm",
-          contents: [
-            buildRow("ประเภท", typeText),
-            buildRow(
-              "ยอดเงิน",
-              `${ocr.amount?.toLocaleString() ?? "-"} บาท`,
-              ocr.type === "INCOME" ? "#27ACB2" : "#E74C3C"
-            ),
-            buildRow("รายละเอียด", ocr.description),
-            buildRow("หมวดหมู่", ocr.category),
-            ...(ocr.merchant ? [buildRow("ร้าน/ผู้รับ", ocr.merchant)] : []),
-            ...(ocr.date ? [buildRow("วันที่", ocr.date)] : []),
-            { type: "separator" as const, margin: "sm" as const },
-            {
-              type: "text" as const,
-              text: confidenceText,
-              size: "xs" as const,
-              color: confidenceColor,
-              margin: "sm" as const,
-            },
-          ],
-        },
-        footer: {
-          type: "box",
-          layout: "horizontal",
-          spacing: "sm",
-          contents: [
-            {
-              type: "button",
-              style: "primary",
-              color: "#27ACB2",
-              label: "✅ ยืนยัน",
-              action: {
-                type: "postback",
-                label: "✅ ยืนยัน",
-                data: "action=confirm_expense",
-              },
-            },
-            {
-              type: "button",
-              style: "secondary",
-              label: "❌ ยกเลิก",
-              action: {
-                type: "postback",
-                label: "❌ ยกเลิก",
-                data: "action=cancel_expense",
-              },
-            },
-          ],
-        },
+  const flexMessage = {
+    type: "flex" as const,
+    altText: `ยืนยันการบันทึก ${ocr.amount?.toLocaleString()} บาท?`,
+    contents: {
+      type: "bubble" as const,
+      body: {
+        type: "box" as const,
+        layout: "vertical" as const,
+        contents: [
+          {
+            type: "text" as const,
+            text: "📋 ตรวจสอบข้อมูลจากสลิป",
+            weight: "bold" as const,
+            size: "lg" as const,
+          },
+          {
+            type: "text" as const,
+            text: `${typeText}: ${ocr.amount?.toLocaleString() ?? "-"} บาท`,
+            margin: "md" as const,
+          },
+          {
+            type: "text" as const,
+            text: ocr.description,
+            size: "sm" as const,
+            color: "#888888",
+            wrap: true,
+          },
+        ],
       },
-    } as any);
+      footer: {
+        type: "box" as const,
+        layout: "vertical" as const,
+        spacing: "sm" as const,
+        contents: [
+          {
+            type: "button" as const,
+            style: "primary" as const,
+            action: {
+              type: "postback" as const,
+              label: "✅ ยืนยัน",
+              data: "action=confirm_expense",
+            },
+          },
+          {
+            type: "button" as const,
+            style: "link" as const,
+            action: {
+              type: "postback" as const,
+              label: "❌ ยกเลิก",
+              data: "action=cancel_expense",
+            },
+          },
+        ],
+      },
+    },
+  };
 
+  try {
+    logger.debug("Sending Flex Message", {
+      userId,
+      payload: JSON.stringify(flexMessage).substring(0, 500),
+    });
+
+    await lineClient.pushMessage(userId, flexMessage);
     logger.debug("OCR confirm message sent", { userId });
   } catch (err) {
+    const errorResponse = (err as any)?.response;
+    const errorDetails = {
+      message: (err as Error).message,
+      status: errorResponse?.status,
+      statusText: errorResponse?.statusText,
+      data: errorResponse?.data,
+      headers: errorResponse?.headers,
+    };
+    logger.error("Failed to send OCR confirm message", {
+      error: (err as Error).message,
+      fullError: JSON.stringify(errorDetails, null, 2),
+    });
     throw new ExternalServiceError("LINE", (err as Error).message);
   }
 }

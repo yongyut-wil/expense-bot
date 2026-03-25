@@ -8,7 +8,9 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 jest.mock("@google/generative-ai");
 
-const mockGoogleAI = GoogleGenerativeAI as jest.MockedClass<typeof GoogleGenerativeAI>;
+const mockGoogleAI = GoogleGenerativeAI as jest.MockedClass<
+  typeof GoogleGenerativeAI
+>;
 
 describe("Google AI Provider", () => {
   let provider: GoogleProvider;
@@ -18,11 +20,14 @@ describe("Google AI Provider", () => {
     jest.clearAllMocks();
 
     mockGenerateContent = jest.fn();
-    mockGoogleAI.mockImplementation(() => ({
-      getGenerativeModel: jest.fn().mockReturnValue({
-        generateContent: mockGenerateContent,
-      }),
-    }) as any);
+    mockGoogleAI.mockImplementation(
+      () =>
+        ({
+          getGenerativeModel: jest.fn().mockReturnValue({
+            generateContent: mockGenerateContent,
+          }),
+        }) as any
+    );
 
     provider = new GoogleProvider("test-api-key");
   });
@@ -31,12 +36,13 @@ describe("Google AI Provider", () => {
     it("should parse expense message successfully", async () => {
       mockGenerateContent.mockResolvedValue({
         response: {
-          text: () => JSON.stringify({
-            type: "EXPENSE",
-            amount: 120,
-            description: "ค่าอาหาร",
-            category: "อาหาร",
-          }),
+          text: () =>
+            JSON.stringify({
+              type: "EXPENSE",
+              amount: 120,
+              description: "ค่าอาหาร",
+              category: "อาหาร",
+            }),
         },
       });
 
@@ -53,12 +59,13 @@ describe("Google AI Provider", () => {
     it("should parse income message successfully", async () => {
       mockGenerateContent.mockResolvedValue({
         response: {
-          text: () => JSON.stringify({
-            type: "INCOME",
-            amount: 30000,
-            description: "เงินเดือน",
-            category: "เงินเดือน",
-          }),
+          text: () =>
+            JSON.stringify({
+              type: "INCOME",
+              amount: 30000,
+              description: "เงินเดือน",
+              category: "เงินเดือน",
+            }),
         },
       });
 
@@ -105,7 +112,9 @@ describe("Google AI Provider", () => {
     it("should throw ExternalServiceError when API fails", async () => {
       mockGenerateContent.mockRejectedValue(new Error("API timeout"));
 
-      await expect(provider.parseExpense("test")).rejects.toThrow("Google Gemini");
+      await expect(provider.parseExpense("test")).rejects.toThrow(
+        "Google Gemini"
+      );
     });
 
     it("should use gemini-1.5-pro model", async () => {
@@ -113,39 +122,44 @@ describe("Google AI Provider", () => {
         generateContent: mockGenerateContent,
       });
 
-      mockGoogleAI.mockImplementation(() => ({
-        getGenerativeModel: mockGetModel,
-      }) as any);
+      mockGoogleAI.mockImplementation(
+        () =>
+          ({
+            getGenerativeModel: mockGetModel,
+          }) as any
+      );
 
       provider = new GoogleProvider("test-api-key");
 
       mockGenerateContent.mockResolvedValue({
         response: {
-          text: () => JSON.stringify({
-            type: "EXPENSE",
-            amount: 100,
-            description: "test",
-            category: "อื่นๆ",
-          }),
+          text: () =>
+            JSON.stringify({
+              type: "EXPENSE",
+              amount: 100,
+              description: "test",
+              category: "อื่นๆ",
+            }),
         },
       });
 
       await provider.parseExpense("test");
 
       expect(mockGetModel).toHaveBeenCalledWith({
-        model: "gemini-1.5-pro",
+        model: "gemini-2.5-flash",
       });
     });
 
     it("should include system prompt in request", async () => {
       mockGenerateContent.mockResolvedValue({
         response: {
-          text: () => JSON.stringify({
-            type: "EXPENSE",
-            amount: 100,
-            description: "test",
-            category: "อื่นๆ",
-          }),
+          text: () =>
+            JSON.stringify({
+              type: "EXPENSE",
+              amount: 100,
+              description: "test",
+              category: "อื่นๆ",
+            }),
         },
       });
 

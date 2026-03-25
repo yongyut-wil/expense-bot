@@ -5,6 +5,18 @@ import { ExternalServiceError } from "../utils/errors";
 import { logger } from "../utils/logger";
 import { SYSTEM_PROMPT } from "../services/ai/prompt";
 
+function extractJSON(text: string): string {
+  const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (jsonMatch) {
+    return jsonMatch[1].trim();
+  }
+  const braceMatch = text.match(/\{[\s\S]*\}/);
+  if (braceMatch) {
+    return braceMatch[0];
+  }
+  return text.trim();
+}
+
 const OCR_PROMPT = `คุณคือผู้เชี่ยวชาญอ่านสลิปและใบเสร็จไทย ตอบเป็น JSON เท่านั้น ห้ามมี text อื่น
 
 รูปแบบ JSON ที่ต้องตอบ:
@@ -40,7 +52,7 @@ export class GoogleProvider implements AIProvider, OCRProvider {
     logger.debug("Using Google Gemini provider");
     try {
       const model = this.client.getGenerativeModel({
-        model: "gemini-1.5-pro",
+        model: "gemini-2.5-flash",
       });
 
       const prompt = `${SYSTEM_PROMPT}\n\nUser message: ${text}`;
@@ -68,7 +80,7 @@ export class GoogleProvider implements AIProvider, OCRProvider {
     logger.debug("Using Google Gemini Vision for OCR");
     try {
       const model = this.client.getGenerativeModel({
-        model: "gemini-1.5-pro",
+        model: "gemini-2.5-flash",
       });
 
       const result = await model.generateContent([
@@ -83,7 +95,9 @@ export class GoogleProvider implements AIProvider, OCRProvider {
       ]);
 
       const raw = result.response.text();
-      const parsed = JSON.parse(raw) as OcrResult;
+      logger.debug("Raw OCR response", { raw: raw.substring(0, 200) });
+      const jsonString = extractJSON(raw);
+      const parsed = JSON.parse(jsonString) as OcrResult;
 
       logger.info("OCR result", {
         success: parsed.success,
@@ -94,7 +108,9 @@ export class GoogleProvider implements AIProvider, OCRProvider {
       return parsed;
     } catch (err) {
       if (err instanceof SyntaxError) {
-        logger.warn("Failed to parse OCR response as JSON");
+        logger.warn("Failed to parse OCR response as JSON", {
+          error: (err as Error).message,
+        });
         return {
           success: false,
           type: "UNKNOWN",
