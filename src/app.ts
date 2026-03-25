@@ -21,10 +21,7 @@ export function createApp() {
   // 2. Rate limiting ทั่วไป
   app.use(generalLimiter);
 
-  // 3. Parse JSON body
-  app.use(express.json());
-
-  // 4. Health check — ไม่ต้อง auth ใช้เช็คว่า server ยังรันอยู่
+  // 3. Health check — ไม่ต้อง auth ใช้เช็คว่า server ยังรันอยู่
   app.get("/health", (req, res) => {
     res.json({
       status: "ok",
@@ -32,7 +29,7 @@ export function createApp() {
     });
   });
 
-  // 5. LINE Webhook
+  // 4. LINE Webhook
   app.post(
     "/webhook",
     (req, res, next) => {
@@ -42,10 +39,21 @@ export function createApp() {
       });
       next();
     },
+    express.json({
+      verify: (req, res, buf, encoding) => {
+        // เก็บ raw body สำหรับ LINE signature verification
+        (req as any).rawBody = buf.toString(
+          (encoding as BufferEncoding) || "utf8"
+        );
+      },
+    }),
     webhookLimiter, // rate limit เฉพาะ webhook
     verifyLineSignature, // verify ว่ามาจาก LINE จริง
     asyncHandler(webhookHandler)
   );
+
+  // 5. Parse JSON body สำหรับ routes อื่นๆ
+  app.use(express.json());
 
   // 6. 404 handler
   app.use((req, res) => {

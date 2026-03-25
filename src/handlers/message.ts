@@ -79,6 +79,10 @@ export async function webhookHandler(req: Request, res: Response) {
   // Validate payload ก่อนประมวลผล
   const result = lineWebhookSchema.safeParse(req.body);
   if (!result.success) {
+    logger.error("❌ LINE webhook validation failed", {
+      errors: result.error.issues,
+      receivedBody: req.body,
+    });
     throw new ValidationError("Invalid LINE webhook payload");
   }
 
@@ -132,10 +136,11 @@ export async function webhookHandler(req: Request, res: Response) {
       if (event.message?.type !== "text") return;
 
       const text = event.message.text!.trim();
+      const messageId = event.message.id!;
       logger.info("Received message", { userId, text });
 
       try {
-        await processMessage(userId, text, replyToken);
+        await processMessage(userId, text, replyToken, messageId);
       } catch (err) {
         logger.error("Failed to process message", {
           userId,
@@ -154,7 +159,8 @@ export async function webhookHandler(req: Request, res: Response) {
 async function processMessage(
   userId: string,
   text: string,
-  replyToken: string
+  replyToken: string,
+  messageId: string
 ) {
   logger.info("⚙️ Processing message", { userId, text, replyToken });
   const normalized = text.toLowerCase().trim();
@@ -191,13 +197,17 @@ async function processMessage(
   // เก็บ pending รอ confirm
   setPending(userId, { parsedExpense: parsed });
 
-  // ส่ง confirm message
-  await sendExpenseConfirmMessage(userId, {
-    type: parsed.type,
-    amount: parsed.amount,
-    description: parsed.description,
-    category: parsed.category,
-  });
+  // ส่ง confirm message (พร้อม transaction ID)
+  await sendExpenseConfirmMessage(
+    userId,
+    {
+      type: parsed.type,
+      amount: parsed.amount,
+      description: parsed.description,
+      category: parsed.category,
+    },
+    messageId
+  );
 }
 
 async function handleImageMessage(
@@ -228,8 +238,8 @@ async function handleImageMessage(
   // เก็บ pending รอ confirm
   setPending(userId, { ocrResult, imageMessageId: messageId });
 
-  // ส่ง confirm message
-  await sendOcrConfirmMessage(userId, ocrResult);
+  // ส่ง confirm message (พร้อม transaction ID)
+  await sendOcrConfirmMessage(userId, ocrResult, messageId);
 }
 
 async function downloadLineImage(messageId: string): Promise<Buffer> {

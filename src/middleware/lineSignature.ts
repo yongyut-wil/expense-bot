@@ -16,10 +16,19 @@ export function verifyLineSignature(
     return next(new UnauthorizedError("Missing LINE signature"));
   }
 
-  const body = JSON.stringify(req.body);
+  // ใช้ raw body ที่เก็บไว้จาก captureRawBody middleware
+  const rawBody = (req as any).rawBody as string;
+
+  if (!rawBody) {
+    logger.error("Raw body not available for signature verification");
+    return next(
+      new UnauthorizedError("Raw body not available for verification")
+    );
+  }
+
   const expectedSignature = crypto
     .createHmac("sha256", config.LINE_CHANNEL_SECRET)
-    .update(body)
+    .update(rawBody)
     .digest("base64");
 
   // timingSafeEqual ป้องกัน timing attack
@@ -31,7 +40,11 @@ export function verifyLineSignature(
     crypto.timingSafeEqual(sigBuffer, expectedBuffer);
 
   if (!isValid) {
-    logger.warn("Invalid LINE signature", { ip: req.ip });
+    logger.warn("Invalid LINE signature", {
+      ip: req.ip,
+      signatureLength: signature.length,
+      expectedLength: expectedSignature.length,
+    });
     return next(new UnauthorizedError("Invalid LINE signature"));
   }
 

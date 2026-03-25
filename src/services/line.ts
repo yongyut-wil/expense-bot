@@ -202,7 +202,8 @@ export async function sendExpenseConfirmMessage(
     amount: number;
     description: string;
     category: string;
-  }
+  },
+  transactionId: string
 ): Promise<void> {
   const isIncome = expense.type === "INCOME";
   const headerColor = isIncome ? "#4A7C59" : "#8B4049";
@@ -395,7 +396,7 @@ export async function sendExpenseConfirmMessage(
             action: {
               type: "postback" as const,
               label: "✓ ยืนยัน",
-              data: "action=confirm_expense",
+              data: `action=confirm_expense&type=${expense.type}&amount=${expense.amount}&description=${encodeURIComponent(expense.description)}&category=${encodeURIComponent(expense.category)}&txId=${transactionId}`,
             },
           },
           {
@@ -405,7 +406,7 @@ export async function sendExpenseConfirmMessage(
             action: {
               type: "postback" as const,
               label: "✕ ยกเลิก",
-              data: "action=cancel_expense",
+              data: `action=cancel_expense&txId=${transactionId}`,
             },
           },
         ],
@@ -435,7 +436,8 @@ export async function sendExpenseConfirmMessage(
 
 export async function sendOcrConfirmMessage(
   userId: string,
-  ocr: OcrResult
+  ocr: OcrResult,
+  transactionId: string
 ): Promise<void> {
   const isIncome = ocr.type === "INCOME";
   const headerColor = isIncome ? "#4A7C59" : "#8B4049";
@@ -695,7 +697,7 @@ export async function sendOcrConfirmMessage(
             action: {
               type: "postback" as const,
               label: "✓ ยืนยัน",
-              data: "action=confirm_expense",
+              data: `action=confirm_expense&type=${ocr.type}&amount=${ocr.amount}&description=${encodeURIComponent(ocr.description)}&category=${encodeURIComponent(ocr.category)}&txId=${transactionId}`,
             },
           },
           {
@@ -705,7 +707,7 @@ export async function sendOcrConfirmMessage(
             action: {
               type: "postback" as const,
               label: "✕ ยกเลิก",
-              data: "action=cancel_expense",
+              data: `action=cancel_expense&txId=${transactionId}`,
             },
           },
         ],

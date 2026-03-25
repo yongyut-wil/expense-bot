@@ -3,6 +3,10 @@ import { getPending, deletePending } from "../services/pendingStore";
 import { saveExpense } from "../services/expense";
 import { replyText, sendExpenseSuccessMessage } from "../services/line";
 import { logger } from "../utils/logger";
+import {
+  isTransactionProcessed,
+  markTransactionProcessed,
+} from "../services/transactionStore";
 
 export async function handlePostback(event: PostbackEvent) {
   const userId = event.source.userId!;
@@ -13,45 +17,61 @@ export async function handlePostback(event: PostbackEvent) {
   logger.info("Postback received", { userId, action });
 
   if (action === "confirm_expense") {
-    const pending = getPending(userId);
+    // อ่านข้อมูลจาก postback data แทน in-memory store
+    const type = params.get("type");
+    const amountStr = params.get("amount");
+    const description = params.get("description");
+    const category = params.get("category");
+    const txId = params.get("txId");
 
-    if (!pending) {
+    // Validate ข้อมูล
+    if (!type || !amountStr || !description || !category || !txId) {
+      return replyText(replyToken, "ข้อมูลไม่ครบค่ะ ลองส่งใหม่อีกครั้งนะคะ 🙏");
+    }
+
+    // ตรวจสอบว่า transaction นี้ถูก process ไปแล้วหรือยัง
+    if (isTransactionProcessed(txId)) {
+      logger.warn("Duplicate transaction detected", { txId, userId });
       return replyText(
         replyToken,
-        "หมดเวลายืนยันแล้วค่ะ (5 นาที) 😅\nลองส่งข้อมูลใหม่อีกครั้งนะคะ"
+        "รายการนี้ถูกดำเนินการไปแล้วค่ะ (อาจถูกบันทึกหรือยกเลิกไปแล้ว)"
       );
     }
 
-    // รองรับทั้ง OCR และ text parsed
-    const expense = pending.ocrResult || pending.parsedExpense;
-
-    if (!expense || !expense.amount) {
-      deletePending(userId);
-      return replyText(replyToken, "ข้อมูลไม่ครบค่ะ ลองส่งใหม่อีกครั้งนะคะ 🙏");
+    const amount = parseFloat(amountStr);
+    if (isNaN(amount) || amount <= 0) {
+      return replyText(
+        replyToken,
+        "จำนวนเงินไม่ถูกต้องค่ะ ลองส่งใหม่อีกครั้งนะคะ 🙏"
+      );
     }
 
     try {
       await saveExpense(userId, {
-        type: expense.type as "INCOME" | "EXPENSE",
-        amount: expense.amount,
-        description: expense.description,
-        category: expense.category,
+        type: type as "INCOME" | "EXPENSE",
+        amount,
+        description: decodeURIComponent(description),
+        category: decodeURIComponent(category),
       });
 
+      // Mark transaction เป็น processed
+      markTransactionProcessed(txId);
+
+      // ลบ pending ถ้ามี (สำหรับกรณี OCR)
       deletePending(userId);
 
-      const source = pending.ocrResult ? "OCR" : "text";
-      logger.info(`Expense confirmed from ${source}`, {
+      logger.info("Expense confirmed from postback", {
         userId,
-        amount: expense.amount,
-        category: expense.category,
+        amount,
+        category: decodeURIComponent(category),
+        txId,
       });
 
       return sendExpenseSuccessMessage(replyToken, {
-        type: expense.type,
-        amount: expense.amount,
-        description: expense.description,
-        category: expense.category,
+        type,
+        amount,
+        description: decodeURIComponent(description),
+        category: decodeURIComponent(category),
       });
     } catch (err) {
       logger.error("Failed to save expense", {
@@ -62,16 +82,25 @@ export async function handlePostback(event: PostbackEvent) {
   }
 
   if (action === "cancel_expense") {
-    const pending = getPending(userId);
+    const txId = params.get("txId");
 
-    if (!pending) {
-      return replyText(replyToken, "รายการนี้ถูกดำเนินการไปแล้วค่ะ 😊");
+    // Mark transaction เป็น processed (แม้จะยกเลิก)
+    if (txId) {
+      if (isTransactionProcessed(txId)) {
+        logger.warn("Duplicate cancel transaction detected", { txId, userId });
+        return replyText(
+          replyToken,
+          "รายการนี้ถูกดำเนินการไปแล้วค่ะ (อาจถูกบันทึกหรือยกเลิกไปแล้ว)"
+        );
+      }
+      markTransactionProcessed(txId);
+      logger.info("Transaction cancelled", { userId, txId });
     }
 
     deletePending(userId);
     return replyText(
       replyToken,
-      "ยกเลิกแล้วค่ะ 👌\nถ้าอยากบันทึกใหม่ ส่งข้อมูลมาได้เลยนะคะ"
+      "ยกเลิกแล้วค่ะ\nถ้าอยากบันทึกใหม่ ส่งข้อมูลมาได้เลยนะคะ"
     );
   }
 

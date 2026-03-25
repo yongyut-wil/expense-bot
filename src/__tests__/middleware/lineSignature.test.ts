@@ -15,21 +15,23 @@ describe("LINE Signature Verification Middleware", () => {
   let next: NextFunction;
 
   beforeEach(() => {
+    const rawBody = JSON.stringify({ test: "data" });
     req = {
       headers: {},
       body: { test: "data" },
       ip: "127.0.0.1",
-    };
+      rawBody, // ⭐ เพิ่ม rawBody
+    } as any;
     res = {};
     next = jest.fn();
   });
 
   describe("Valid signature", () => {
     it("should call next() when signature is valid", () => {
-      const body = JSON.stringify(req.body);
+      const rawBody = (req as any).rawBody;
       const validSignature = crypto
         .createHmac("sha256", config.LINE_CHANNEL_SECRET)
-        .update(body)
+        .update(rawBody)
         .digest("base64");
 
       req.headers = { "x-line-signature": validSignature };
@@ -54,6 +56,20 @@ describe("LINE Signature Verification Middleware", () => {
       );
     });
 
+    it("should call next with UnauthorizedError when raw body is missing", () => {
+      req.headers = { "x-line-signature": "some-signature" };
+      delete (req as any).rawBody;
+
+      verifyLineSignature(req as Request, res as Response, next);
+
+      expect(next).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: "Raw body not available for verification",
+          statusCode: 401,
+        })
+      );
+    });
+
     it("should call next with UnauthorizedError when signature is incorrect", () => {
       req.headers = { "x-line-signature": "invalid-signature" };
 
@@ -68,10 +84,10 @@ describe("LINE Signature Verification Middleware", () => {
     });
 
     it("should call next with UnauthorizedError when signature length differs", () => {
-      const body = JSON.stringify(req.body);
+      const rawBody = (req as any).rawBody;
       const validSignature = crypto
         .createHmac("sha256", config.LINE_CHANNEL_SECRET)
-        .update(body)
+        .update(rawBody)
         .digest("base64");
 
       // ลด signature ให้สั้นกว่า
@@ -92,10 +108,10 @@ describe("LINE Signature Verification Middleware", () => {
     it("should use timingSafeEqual for comparison", () => {
       const cryptoSpy = jest.spyOn(crypto, "timingSafeEqual");
 
-      const body = JSON.stringify(req.body);
+      const rawBody = (req as any).rawBody;
       const validSignature = crypto
         .createHmac("sha256", config.LINE_CHANNEL_SECRET)
-        .update(body)
+        .update(rawBody)
         .digest("base64");
 
       req.headers = { "x-line-signature": validSignature };
