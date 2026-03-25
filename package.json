@@ -11,7 +11,9 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "prisma studio",
+    "prepare": "husky",
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,md}\""
   },
   "keywords": [],
   "author": "",
@@ -22,6 +24,7 @@
     "@line/bot-sdk": "^10.6.0",
     "@prisma/adapter-pg": "^7.5.0",
     "@prisma/client": "^7.5.0",
+    "axios": "^1.13.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "express-rate-limit": "^8.3.1",
@@ -31,14 +34,26 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@types/axios": "^0.9.36",
     "@types/express": "^5.0.6",
     "@types/jest": "^30.0.0",
     "@types/node": "^25.5.0",
+    "husky": "^9.1.7",
     "jest": "^30.3.0",
+    "lint-staged": "^16.4.0",
     "nodemon": "^3.1.14",
+    "prettier": "^3.8.1",
     "prisma": "^7.5.0",
     "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
   }
 }

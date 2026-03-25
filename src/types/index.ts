@@ -19,3 +19,21 @@ export interface RecentExpense {
   category: string | null;
   date: Date;
 }
+
+export interface OcrResult {
+  success: boolean;
+  type: "INCOME" | "EXPENSE" | "UNKNOWN";
+  amount: number | null;
+  description: string;
+  category: string;
+  date: string | null;
+  merchant: string | null;
+  confidence: "high" | "medium" | "low";
+}
+
+export interface PendingConfirmation {
+  userId: string;
+  ocrResult: OcrResult;
+  imageMessageId: string;
+  createdAt: Date;
+}

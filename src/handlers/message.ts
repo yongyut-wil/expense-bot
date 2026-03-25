@@ -14,6 +14,13 @@ import {
 import { logger } from "../utils/logger";
 import { ValidationError } from "../utils/errors";
 import { parseExpenseMessage } from "../services";
+import axios from "axios";
+import { config } from "../config";
+import { parseSlipImage } from "../services/ocr";
+import { setPending } from "../services/pendingStore";
+import { sendOcrConfirmMessage, lineClient } from "../services/line";
+import { handlePostback } from "./postback";
+import { PostbackEvent } from "@line/bot-sdk";
 
 // Validate structure ของ LINE webhook payload
 const lineWebhookSchema = z.object({
@@ -28,7 +35,13 @@ const lineWebhookSchema = z.object({
       message: z
         .object({
           type: z.string(),
+          id: z.string().optional(), // ← เพิ่ม id สำหรับ image
           text: z.string().optional(),
+        })
+        .optional(),
+      postback: z // ← เพิ่ม postback
+        .object({
+          data: z.string(),
         })
         .optional(),
     })
@@ -57,11 +70,11 @@ const HELP_TEXT = `วิธีใช้Expense-Bot 📖
   "ล่าสุด" — ดู 5 รายการล่าสุด`;
 
 export async function webhookHandler(req: Request, res: Response) {
-  logger.info("📥 Webhook received", { 
+  logger.info("📥 Webhook received", {
     headers: req.headers,
-    body: req.body 
+    body: req.body,
   });
-  
+
   // Validate payload ก่อนประมวลผล
   const result = lineWebhookSchema.safeParse(req.body);
   if (!result.success) {
@@ -78,28 +91,44 @@ export async function webhookHandler(req: Request, res: Response) {
   // ใช้ allSettled เพื่อให้ event อื่นยังทำงานได้แม้ event นึง fail
   await Promise.allSettled(
     events.map(async (event) => {
-      logger.info("🔍 Processing event", { type: event.type, messageType: event.message?.type });
-      
-      if (event.type !== "message") {
-        logger.info("⏭️ Skipping non-message event", { type: event.type });
-        return;
-      }
-      if (event.message?.type !== "text") {
-        logger.info("⏭️ Skipping non-text message", { type: event.message?.type });
-        return;
-      }
-      if (!event.replyToken || !event.source.userId) {
-        logger.warn("⚠️ Missing replyToken or userId", { 
-          hasReplyToken: !!event.replyToken, 
-          hasUserId: !!event.source.userId 
-        });
+      logger.info("🔍 Processing event", {
+        type: event.type,
+        messageType: event.message?.type,
+      });
+
+      // ---- postback (ปุ่ม confirm/cancel) ----
+      if (event.type === "postback") {
+        if (!event.source.userId || !event.replyToken) return;
+        await handlePostback(event as unknown as PostbackEvent);
         return;
       }
 
-      const text = event.message.text!.trim();
+      if (event.type !== "message") return;
+      if (!event.replyToken || !event.source.userId) return;
+
       const userId = event.source.userId;
       const replyToken = event.replyToken;
 
+      // ---- image message (สลิป) ----
+      if (event.message?.type === "image") {
+        await handleImageMessage(userId, event.message.id!, replyToken).catch(
+          async (err) => {
+            logger.error("Failed to process image", {
+              error: (err as Error).message,
+            });
+            await replyText(
+              replyToken,
+              "เกิดข้อผิดพลาดในการอ่านสลิปค่ะ ลองใหม่อีกครั้งนะคะ 🙏"
+            ).catch(() => {});
+          }
+        );
+        return;
+      }
+
+      // ---- text message (เดิม) ----
+      if (event.message?.type !== "text") return;
+
+      const text = event.message.text!.trim();
       logger.info("Received message", { userId, text });
 
       try {
@@ -110,7 +139,6 @@ export async function webhookHandler(req: Request, res: Response) {
           text,
           error: (err as Error).message,
         });
-        // แจ้ง user ว่าเกิด error แทนที่จะ silent fail
         await replyText(
           replyToken,
           "เกิดข้อผิดพลาด ลองใหม่อีกครั้งนะคะ 🙏"
@@ -163,4 +191,49 @@ async function processMessage(
     replyToken,
     `${emoji} บันทึก${typeText}แล้วค่ะ!\n📝 ${parsed.description}\n💵 ${parsed.amount.toLocaleString()} บาท\n🏷️ ${parsed.category}`
   );
+}
+
+async function handleImageMessage(
+  userId: string,
+  messageId: string,
+  replyToken: string
+) {
+  logger.info("Received image message", { userId, messageId });
+
+  // ตอบ user ทันทีก่อนว่ากำลังอ่าน
+  await replyText(replyToken, "⏳ กำลังอ่านสลิป รอสักครู่นะคะ...");
+
+  // Download รูปจาก LINE
+  const imageBuffer = await downloadLineImage(messageId);
+  const base64 = imageBuffer.toString("base64");
+
+  // ส่งให้ Google Vision วิเคราะห์
+  const ocrResult = await parseSlipImage(base64, "image/jpeg");
+
+  if (!ocrResult.success || !ocrResult.amount) {
+    await lineClient.pushMessage(userId, {
+      type: "text",
+      text: "ป้านวลอ่านสลิปไม่ออกค่ะ 😅\nลองถ่ายใหม่ให้ชัดขึ้น หรือพิมพ์ข้อมูลเองได้เลยนะคะ",
+    });
+    return;
+  }
+
+  // เก็บ pending รอ confirm
+  setPending(userId, { ocrResult, imageMessageId: messageId });
+
+  // ส่ง confirm message
+  await sendOcrConfirmMessage(userId, ocrResult);
+}
+
+async function downloadLineImage(messageId: string): Promise<Buffer> {
+  const response = await axios.get(
+    `https://api-data.line.me/v2/bot/message/${messageId}/content`,
+    {
+      headers: {
+        Authorization: `Bearer ${config.LINE_CHANNEL_ACCESS_TOKEN}`,
+      },
+      responseType: "arraybuffer",
+    }
+  );
+  return Buffer.from(response.data as ArrayBuffer);
 }
