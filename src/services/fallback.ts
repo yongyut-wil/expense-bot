@@ -25,8 +25,21 @@ export function parseFallback(text: string): ParsedExpense {
   }
   
   // Detect type (รายรับ vs รายจ่าย)
-  const incomeKeywords = ["รับ", "ได้", "โบนัส", "เงินเดือน", "รายได้", "income"];
-  const isIncome = incomeKeywords.some(keyword => normalized.includes(keyword));
+  const incomeKeywords = ["รายรับ", "เงินเข้า", "รับ", "ได้", "โบนัส", "เงินเดือน", "รายได้", "income", "เข้า"];
+  const expenseKeywords = ["รายจ่าย", "เงินออก", "จ่าย", "ออก", "ซื้อ", "ใช้", "expense"];
+  
+  const hasIncomeKeyword = incomeKeywords.some(keyword => normalized.includes(keyword));
+  const hasExpenseKeyword = expenseKeywords.some(keyword => normalized.includes(keyword));
+  
+  // ถ้ามีทั้ง income และ expense keywords ให้เลือกตามที่ปรากฏก่อน
+  let isIncome = false;
+  if (hasIncomeKeyword && hasExpenseKeyword) {
+    const incomePos = incomeKeywords.map(k => normalized.indexOf(k)).filter(i => i >= 0)[0];
+    const expensePos = expenseKeywords.map(k => normalized.indexOf(k)).filter(i => i >= 0)[0];
+    isIncome = incomePos < expensePos;
+  } else {
+    isIncome = hasIncomeKeyword;
+  }
   
   // Detect category
   let category = "อื่นๆ";

@@ -30,6 +30,16 @@ describe("Fallback Parser", () => {
   });
 
   describe("Income detection", () => {
+    it("should detect 'รายรับ' keyword", () => {
+      const result = parseFallback("รายรับ 1000");
+      expect(result.type).toBe("INCOME");
+    });
+
+    it("should detect 'เงินเข้า' keyword", () => {
+      const result = parseFallback("เงินเข้า 500");
+      expect(result.type).toBe("INCOME");
+    });
+
     it("should detect 'รับ' keyword", () => {
       const result = parseFallback("รับเงิน 5000");
       expect(result.type).toBe("INCOME");
@@ -44,8 +54,25 @@ describe("Fallback Parser", () => {
       const result = parseFallback("โบนัสปีใหม่ 10000");
       expect(result.type).toBe("INCOME");
     });
+  });
 
-    it("should default to EXPENSE when no income keyword", () => {
+  describe("Expense detection", () => {
+    it("should detect 'รายจ่าย' keyword", () => {
+      const result = parseFallback("รายจ่าย 2000");
+      expect(result.type).toBe("EXPENSE");
+    });
+
+    it("should detect 'เงินออก' keyword", () => {
+      const result = parseFallback("เงินออก 300");
+      expect(result.type).toBe("EXPENSE");
+    });
+
+    it("should detect 'จ่าย' keyword", () => {
+      const result = parseFallback("จ่ายค่าเช่า 5000");
+      expect(result.type).toBe("EXPENSE");
+    });
+
+    it("should default to EXPENSE when no keyword", () => {
       const result = parseFallback("กินข้าว 100");
       expect(result.type).toBe("EXPENSE");
     });
@@ -110,6 +137,16 @@ describe("Fallback Parser", () => {
     it("should handle multiple numbers (use first one)", () => {
       const result = parseFallback("กินข้าว 100 บาท รวม 120");
       expect(result.amount).toBe(100);
+    });
+
+    it("should prioritize income keyword when both income and expense keywords present (income first)", () => {
+      const result = parseFallback("รับเงินเดือนแล้วจ่ายค่าเช่า 5000");
+      expect(result.type).toBe("INCOME");
+    });
+
+    it("should prioritize expense keyword when both income and expense keywords present (expense first)", () => {
+      const result = parseFallback("จ่ายค่าเช่าจากเงินที่รับมา 5000");
+      expect(result.type).toBe("EXPENSE");
     });
   });
 });
