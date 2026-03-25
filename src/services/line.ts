@@ -47,6 +47,154 @@ export function formatRecentMessage(items: RecentExpense[]): string {
   return `5 รายการล่าสุด:\n${lines.join("\n")}`;
 }
 
+export async function sendExpenseSuccessMessage(
+  replyToken: string,
+  expense: {
+    type: string;
+    amount: number;
+    description: string;
+    category: string;
+  }
+): Promise<void> {
+  const isIncome = expense.type === "INCOME";
+  const headerColor = isIncome ? "#4A7C59" : "#8B4049";
+  const amountColor = isIncome ? "#4A7C59" : "#E85D75";
+  const typeIcon = isIncome ? "💰" : "💸";
+  const typeText = isIncome ? "รายรับ" : "รายจ่าย";
+
+  const flexMessage = {
+    type: "flex" as const,
+    altText: `✅ บันทึก${typeText}แล้ว ${expense.amount.toLocaleString()} บาท`,
+    contents: {
+      type: "bubble" as const,
+      header: {
+        type: "box" as const,
+        layout: "vertical" as const,
+        backgroundColor: headerColor,
+        paddingAll: "lg" as const,
+        contents: [
+          {
+            type: "text" as const,
+            text: "✅ บันทึกสำเร็จ",
+            weight: "bold" as const,
+            color: "#ffffff",
+            size: "lg" as const,
+            align: "center" as const,
+          },
+        ],
+      },
+      body: {
+        type: "box" as const,
+        layout: "vertical" as const,
+        spacing: "md" as const,
+        paddingAll: "lg" as const,
+        contents: [
+          {
+            type: "box" as const,
+            layout: "horizontal" as const,
+            contents: [
+              {
+                type: "text" as const,
+                text: "ประเภท",
+                color: "#999999",
+                size: "sm" as const,
+                flex: 2,
+              },
+              {
+                type: "text" as const,
+                text: `${typeIcon} ${typeText}`,
+                weight: "bold" as const,
+                size: "sm" as const,
+                color: headerColor,
+                flex: 3,
+                align: "end" as const,
+              },
+            ],
+          },
+          {
+            type: "box" as const,
+            layout: "horizontal" as const,
+            contents: [
+              {
+                type: "text" as const,
+                text: "ยอดเงิน",
+                color: "#999999",
+                size: "sm" as const,
+                flex: 2,
+              },
+              {
+                type: "text" as const,
+                text: `${expense.amount.toLocaleString()} บาท`,
+                weight: "bold" as const,
+                size: "xl" as const,
+                color: amountColor,
+                flex: 3,
+                align: "end" as const,
+              },
+            ],
+          },
+          { type: "separator" as const, margin: "md" as const },
+          {
+            type: "box" as const,
+            layout: "vertical" as const,
+            margin: "md" as const,
+            spacing: "sm" as const,
+            contents: [
+              {
+                type: "text" as const,
+                text: "รายละเอียด",
+                color: "#999999",
+                size: "xs" as const,
+              },
+              {
+                type: "text" as const,
+                text: expense.description,
+                size: "sm" as const,
+                wrap: true,
+                color: "#333333",
+                weight: "bold" as const,
+              },
+            ],
+          },
+          {
+            type: "box" as const,
+            layout: "vertical" as const,
+            margin: "sm" as const,
+            spacing: "sm" as const,
+            contents: [
+              {
+                type: "text" as const,
+                text: "หมวดหมู่",
+                color: "#999999",
+                size: "xs" as const,
+              },
+              {
+                type: "text" as const,
+                text: `🏷️ ${expense.category}`,
+                size: "sm" as const,
+                color: "#333333",
+              },
+            ],
+          },
+        ],
+      },
+    },
+  };
+
+  try {
+    await lineClient.replyMessage(replyToken, flexMessage);
+    logger.debug("Success Flex Message sent", {
+      type: expense.type,
+      amount: expense.amount,
+    });
+  } catch (err) {
+    logger.error("Failed to send success message", {
+      error: (err as Error).message,
+    });
+    throw new ExternalServiceError("LINE", (err as Error).message);
+  }
+}
+
 export async function sendExpenseConfirmMessage(
   userId: string,
   expense: {

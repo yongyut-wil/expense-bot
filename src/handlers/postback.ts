@@ -1,7 +1,7 @@
 import { PostbackEvent } from "@line/bot-sdk";
 import { getPending, deletePending } from "../services/pendingStore";
 import { saveExpense } from "../services/expense";
-import { replyText } from "../services/line";
+import { replyText, sendExpenseSuccessMessage } from "../services/line";
 import { logger } from "../utils/logger";
 
 export async function handlePostback(event: PostbackEvent) {
@@ -47,13 +47,12 @@ export async function handlePostback(event: PostbackEvent) {
         category: expense.category,
       });
 
-      const emoji = expense.type === "INCOME" ? "💰" : "💸";
-      const typeText = expense.type === "INCOME" ? "รายรับ" : "รายจ่าย";
-
-      return replyText(
-        replyToken,
-        `${emoji} บันทึก${typeText}แล้วค่ะ!\n📝 ${expense.description}\n💵 ${expense.amount.toLocaleString()} บาท\n🏷️ ${expense.category}`
-      );
+      return sendExpenseSuccessMessage(replyToken, {
+        type: expense.type,
+        amount: expense.amount,
+        description: expense.description,
+        category: expense.category,
+      });
     } catch (err) {
       logger.error("Failed to save expense", {
         error: (err as Error).message,
@@ -63,6 +62,12 @@ export async function handlePostback(event: PostbackEvent) {
   }
 
   if (action === "cancel_expense") {
+    const pending = getPending(userId);
+
+    if (!pending) {
+      return replyText(replyToken, "รายการนี้ถูกดำเนินการไปแล้วค่ะ 😊");
+    }
+
     deletePending(userId);
     return replyText(
       replyToken,
