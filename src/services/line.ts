@@ -57,10 +57,12 @@ export async function sendExpenseConfirmMessage(
   }
 ): Promise<void> {
   const isIncome = expense.type === "INCOME";
-  const headerColor = isIncome ? "#27ACB2" : "#FF6B6B";
-  const amountColor = isIncome ? "#27ACB2" : "#E74C3C";
+  const headerColor = isIncome ? "#4A7C59" : "#8B4049";
+  const amountColor = isIncome ? "#4A7C59" : "#E85D75";
   const typeIcon = isIncome ? "💰" : "💸";
   const typeText = isIncome ? "รายรับ" : "รายจ่าย";
+  const typeBadgeColor = isIncome ? "#D4EDDA" : "#F8D7DA";
+  const categoryBadgeColor = "#D6E9F8";
 
   const flexMessage = {
     type: "flex" as const,
@@ -69,78 +71,154 @@ export async function sendExpenseConfirmMessage(
       type: "bubble" as const,
       header: {
         type: "box" as const,
-        layout: "vertical" as const,
+        layout: "horizontal" as const,
         backgroundColor: headerColor,
-        paddingAll: "md" as const,
+        paddingAll: "lg" as const,
         contents: [
           {
             type: "text" as const,
-            text: "📋 ยืนยันการบันทึก",
+            text: "ยืนยันการบันทึก",
             weight: "bold" as const,
             color: "#ffffff",
             size: "md" as const,
+            flex: 1,
+          },
+          {
+            type: "text" as const,
+            text: "🗑️",
+            size: "md" as const,
+            align: "end" as const,
           },
         ],
       },
       body: {
         type: "box" as const,
         layout: "vertical" as const,
-        spacing: "md" as const,
+        spacing: "lg" as const,
+        paddingAll: "lg" as const,
         contents: [
           {
             type: "box" as const,
             layout: "horizontal" as const,
+            spacing: "md" as const,
             contents: [
               {
-                type: "text" as const,
-                text: "ประเภท",
-                color: "#888888",
-                size: "sm" as const,
-                flex: 2,
+                type: "box" as const,
+                layout: "vertical" as const,
+                flex: 1,
+                spacing: "xs" as const,
+                contents: [
+                  {
+                    type: "text" as const,
+                    text: "TYPE",
+                    color: "#999999",
+                    size: "xs" as const,
+                  },
+                  {
+                    type: "box" as const,
+                    layout: "horizontal" as const,
+                    backgroundColor: typeBadgeColor,
+                    cornerRadius: "md" as const,
+                    paddingAll: "sm" as const,
+                    contents: [
+                      {
+                        type: "text" as const,
+                        text: `${typeIcon} ${typeText}`,
+                        size: "sm" as const,
+                        weight: "bold" as const,
+                        color: headerColor,
+                        align: "center" as const,
+                      },
+                    ],
+                  },
+                ],
               },
               {
-                type: "text" as const,
-                text: `${typeIcon} ${typeText}`,
-                weight: "bold" as const,
-                size: "sm" as const,
-                flex: 3,
-                align: "end" as const,
+                type: "box" as const,
+                layout: "vertical" as const,
+                flex: 1,
+                spacing: "xs" as const,
+                contents: [
+                  {
+                    type: "text" as const,
+                    text: "CATEGORY",
+                    color: "#999999",
+                    size: "xs" as const,
+                    align: "end" as const,
+                  },
+                  {
+                    type: "box" as const,
+                    layout: "horizontal" as const,
+                    backgroundColor: categoryBadgeColor,
+                    cornerRadius: "md" as const,
+                    paddingAll: "sm" as const,
+                    contents: [
+                      {
+                        type: "text" as const,
+                        text: `🏷️ ${expense.category}`,
+                        size: "sm" as const,
+                        weight: "bold" as const,
+                        color: "#1E5A8E",
+                        align: "center" as const,
+                      },
+                    ],
+                  },
+                ],
               },
             ],
           },
-          {
-            type: "box" as const,
-            layout: "horizontal" as const,
-            contents: [
-              {
-                type: "text" as const,
-                text: "ยอดเงิน",
-                color: "#888888",
-                size: "sm" as const,
-                flex: 2,
-              },
-              {
-                type: "text" as const,
-                text: `${expense.amount?.toLocaleString() ?? "-"} บาท`,
-                weight: "bold" as const,
-                size: "xl" as const,
-                color: amountColor,
-                flex: 3,
-                align: "end" as const,
-              },
-            ],
-          },
-          { type: "separator" as const, margin: "md" as const },
           {
             type: "box" as const,
             layout: "vertical" as const,
-            margin: "md" as const,
-            spacing: "sm" as const,
+            spacing: "xs" as const,
+            margin: "lg" as const,
             contents: [
               {
                 type: "text" as const,
-                text: "รายละเอียด",
-                color: "#888888",
+                text: "TOTAL AMOUNT",
+                color: "#999999",
+                size: "xs" as const,
+                align: "center" as const,
+              },
+              {
+                type: "box" as const,
+                layout: "baseline" as const,
+                spacing: "xs" as const,
+                contents: [
+                  {
+                    type: "text" as const,
+                    text: expense.amount.toLocaleString(),
+                    size: "4xl" as const,
+                    weight: "bold" as const,
+                    color: amountColor,
+                    align: "center" as const,
+                    flex: 0,
+                  },
+                  {
+                    type: "text" as const,
+                    text: "บาท",
+                    size: "md" as const,
+                    color: amountColor,
+                    flex: 0,
+                    margin: "sm" as const,
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            type: "box" as const,
+            layout: "vertical" as const,
+            spacing: "sm" as const,
+            margin: "lg" as const,
+            backgroundColor: "#F5F5F5",
+            cornerRadius: "md" as const,
+            paddingAll: "md" as const,
+            contents: [
+              {
+                type: "text" as const,
+                text: "DESCRIPTION",
+                color: "#999999",
                 size: "xs" as const,
               },
               {
@@ -148,27 +226,8 @@ export async function sendExpenseConfirmMessage(
                 text: expense.description,
                 size: "sm" as const,
                 wrap: true,
-                color: "#111111",
-              },
-            ],
-          },
-          {
-            type: "box" as const,
-            layout: "vertical" as const,
-            margin: "sm" as const,
-            spacing: "sm" as const,
-            contents: [
-              {
-                type: "text" as const,
-                text: "หมวดหมู่",
-                color: "#888888",
-                size: "xs" as const,
-              },
-              {
-                type: "text" as const,
-                text: `🏷️ ${expense.category}`,
-                size: "sm" as const,
-                color: "#111111",
+                color: "#333333",
+                weight: "bold" as const,
               },
             ],
           },
@@ -176,29 +235,30 @@ export async function sendExpenseConfirmMessage(
       },
       footer: {
         type: "box" as const,
-        layout: "horizontal" as const,
+        layout: "vertical" as const,
         spacing: "sm" as const,
+        paddingAll: "lg" as const,
         contents: [
           {
             type: "button" as const,
             style: "primary" as const,
-            color: headerColor,
+            color: "#22A699",
+            height: "sm" as const,
             action: {
               type: "postback" as const,
-              label: "✅ ยืนยัน",
+              label: "✓ ยืนยัน",
               data: "action=confirm_expense",
             },
-            flex: 1,
           },
           {
             type: "button" as const,
             style: "link" as const,
+            height: "sm" as const,
             action: {
               type: "postback" as const,
-              label: "❌ ยกเลิก",
+              label: "✕ ยกเลิก",
               data: "action=cancel_expense",
             },
-            flex: 1,
           },
         ],
       },
@@ -230,78 +290,148 @@ export async function sendOcrConfirmMessage(
   ocr: OcrResult
 ): Promise<void> {
   const isIncome = ocr.type === "INCOME";
-  const headerColor = isIncome ? "#27ACB2" : "#FF6B6B";
-  const amountColor = isIncome ? "#27ACB2" : "#E74C3C";
+  const headerColor = isIncome ? "#4A7C59" : "#8B4049";
+  const amountColor = isIncome ? "#4A7C59" : "#E85D75";
   const typeIcon = isIncome ? "💰" : "💸";
   const typeText = isIncome ? "รายรับ" : "รายจ่าย";
+  const typeBadgeColor = isIncome ? "#D4EDDA" : "#F8D7DA";
+  const categoryBadgeColor = "#D6E9F8";
 
   const confidenceColor = {
-    high: "#27ACB2",
+    high: "#22A699",
     medium: "#F39C12",
-    low: "#E74C3C",
+    low: "#E85D75",
   }[ocr.confidence];
 
   const confidenceText = {
-    high: "✅ มั่นใจสูง",
-    medium: "⚠️ มั่นใจปานกลาง",
-    low: "❓ มั่นใจต่ำ",
+    high: "✓ สูง",
+    medium: "⚠ ปานกลาง",
+    low: "✕ ต่ำ",
   }[ocr.confidence];
 
   const bodyContents: any[] = [
     {
       type: "box" as const,
       layout: "horizontal" as const,
+      spacing: "md" as const,
       contents: [
         {
-          type: "text" as const,
-          text: "ประเภท",
-          color: "#888888",
-          size: "sm" as const,
-          flex: 2,
+          type: "box" as const,
+          layout: "vertical" as const,
+          flex: 1,
+          spacing: "xs" as const,
+          contents: [
+            {
+              type: "text" as const,
+              text: "TYPE",
+              color: "#999999",
+              size: "xs" as const,
+            },
+            {
+              type: "box" as const,
+              layout: "horizontal" as const,
+              backgroundColor: typeBadgeColor,
+              cornerRadius: "md" as const,
+              paddingAll: "sm" as const,
+              contents: [
+                {
+                  type: "text" as const,
+                  text: `${typeIcon} ${typeText}`,
+                  size: "sm" as const,
+                  weight: "bold" as const,
+                  color: headerColor,
+                  align: "center" as const,
+                },
+              ],
+            },
+          ],
         },
         {
-          type: "text" as const,
-          text: `${typeIcon} ${typeText}`,
-          weight: "bold" as const,
-          size: "sm" as const,
-          flex: 3,
-          align: "end" as const,
+          type: "box" as const,
+          layout: "vertical" as const,
+          flex: 1,
+          spacing: "xs" as const,
+          contents: [
+            {
+              type: "text" as const,
+              text: "CATEGORY",
+              color: "#999999",
+              size: "xs" as const,
+              align: "end" as const,
+            },
+            {
+              type: "box" as const,
+              layout: "horizontal" as const,
+              backgroundColor: categoryBadgeColor,
+              cornerRadius: "md" as const,
+              paddingAll: "sm" as const,
+              contents: [
+                {
+                  type: "text" as const,
+                  text: `🏷️ ${ocr.category}`,
+                  size: "sm" as const,
+                  weight: "bold" as const,
+                  color: "#1E5A8E",
+                  align: "center" as const,
+                },
+              ],
+            },
+          ],
         },
       ],
     },
-    {
-      type: "box" as const,
-      layout: "horizontal" as const,
-      contents: [
-        {
-          type: "text" as const,
-          text: "ยอดเงิน",
-          color: "#888888",
-          size: "sm" as const,
-          flex: 2,
-        },
-        {
-          type: "text" as const,
-          text: `${ocr.amount?.toLocaleString() ?? "-"} บาท`,
-          weight: "bold" as const,
-          size: "xl" as const,
-          color: amountColor,
-          flex: 3,
-          align: "end" as const,
-        },
-      ],
-    },
-    { type: "separator" as const, margin: "md" as const },
     {
       type: "box" as const,
       layout: "vertical" as const,
-      margin: "md" as const,
-      spacing: "sm" as const,
+      spacing: "xs" as const,
+      margin: "lg" as const,
       contents: [
         {
           type: "text" as const,
-          text: "รายละเอียด",
-          color: "#888888",
+          text: "TOTAL AMOUNT",
+          color: "#999999",
+          size: "xs" as const,
+          align: "center" as const,
+        },
+        {
+          type: "box" as const,
+          layout: "baseline" as const,
+          spacing: "xs" as const,
+          contents: [
+            {
+              type: "text" as const,
+              text: ocr.amount?.toLocaleString() ?? "-",
+              size: "4xl" as const,
+              weight: "bold" as const,
+              color: amountColor,
+              align: "center" as const,
+              flex: 0,
+            },
+            {
+              type: "text" as const,
+              text: "บาท",
+              size: "md" as const,
+              color: amountColor,
+              flex: 0,
+              margin: "sm" as const,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      type: "box" as const,
+      layout: "vertical" as const,
+      spacing: "sm" as const,
+      margin: "lg" as const,
+      backgroundColor: "#F5F5F5",
+      cornerRadius: "md" as const,
+      paddingAll: "md" as const,
+      contents: [
+        {
+          type: "text" as const,
+          text: "DESCRIPTION",
+          color: "#999999",
           size: "xs" as const,
         },
         {
@@ -309,104 +439,65 @@ export async function sendOcrConfirmMessage(
           text: ocr.description,
           size: "sm" as const,
           wrap: true,
-          color: "#111111",
-        },
-      ],
-    },
-    {
-      type: "box" as const,
-      layout: "vertical" as const,
-      margin: "sm" as const,
-      spacing: "sm" as const,
-      contents: [
-        {
-          type: "text" as const,
-          text: "หมวดหมู่",
-          color: "#888888",
-          size: "xs" as const,
-        },
-        {
-          type: "text" as const,
-          text: `🏷️ ${ocr.category}`,
-          size: "sm" as const,
-          color: "#111111",
+          color: "#333333",
+          weight: "bold" as const,
         },
       ],
     },
   ];
 
-  if (ocr.merchant) {
-    bodyContents.push({
-      type: "box" as const,
-      layout: "vertical" as const,
-      margin: "sm" as const,
-      spacing: "sm" as const,
-      contents: [
-        {
-          type: "text" as const,
-          text: "ร้านค้า/ผู้รับ",
-          color: "#888888",
-          size: "xs" as const,
-        },
-        {
-          type: "text" as const,
-          text: `🏪 ${ocr.merchant}`,
-          size: "sm" as const,
-          color: "#111111",
-        },
-      ],
-    });
-  }
-
-  if (ocr.date) {
-    bodyContents.push({
-      type: "box" as const,
-      layout: "vertical" as const,
-      margin: "sm" as const,
-      spacing: "sm" as const,
-      contents: [
-        {
-          type: "text" as const,
-          text: "วันที่",
-          color: "#888888",
-          size: "xs" as const,
-        },
-        {
-          type: "text" as const,
-          text: `📅 ${ocr.date}`,
-          size: "sm" as const,
-          color: "#111111",
-        },
-      ],
-    });
-  }
-
-  bodyContents.push(
-    { type: "separator" as const, margin: "md" as const },
-    {
-      type: "box" as const,
-      layout: "horizontal" as const,
-      margin: "md" as const,
-      contents: [
-        {
-          type: "text" as const,
-          text: "ความแม่นยำ OCR",
-          color: "#888888",
-          size: "xs" as const,
-          flex: 2,
-        },
-        {
-          type: "text" as const,
-          text: confidenceText,
-          size: "xs" as const,
-          color: confidenceColor,
-          weight: "bold" as const,
-          flex: 3,
-          align: "end" as const,
-        },
-      ],
+  if (ocr.merchant || ocr.date) {
+    const extraFields: any[] = [];
+    if (ocr.merchant) {
+      extraFields.push({
+        type: "text" as const,
+        text: `🏪 ${ocr.merchant}`,
+        size: "xs" as const,
+        color: "#666666",
+      });
     }
-  );
+    if (ocr.date) {
+      extraFields.push({
+        type: "text" as const,
+        text: `📅 ${ocr.date}`,
+        size: "xs" as const,
+        color: "#666666",
+      });
+    }
+    bodyContents.push({
+      type: "box" as const,
+      layout: "vertical" as const,
+      spacing: "xs" as const,
+      margin: "md" as const,
+      contents: extraFields,
+    });
+  }
+
+  bodyContents.push({
+    type: "box" as const,
+    layout: "horizontal" as const,
+    margin: "md" as const,
+    backgroundColor: "#FAFAFA",
+    cornerRadius: "sm" as const,
+    paddingAll: "sm" as const,
+    contents: [
+      {
+        type: "text" as const,
+        text: "ความแม่นยำ OCR",
+        color: "#999999",
+        size: "xs" as const,
+        flex: 1,
+      },
+      {
+        type: "text" as const,
+        text: confidenceText,
+        size: "xs" as const,
+        color: confidenceColor,
+        weight: "bold" as const,
+        flex: 0,
+      },
+    ],
+  });
 
   const flexMessage = {
     type: "flex" as const,
@@ -415,50 +506,59 @@ export async function sendOcrConfirmMessage(
       type: "bubble" as const,
       header: {
         type: "box" as const,
-        layout: "vertical" as const,
+        layout: "horizontal" as const,
         backgroundColor: headerColor,
-        paddingAll: "md" as const,
+        paddingAll: "lg" as const,
         contents: [
           {
             type: "text" as const,
-            text: "📸 ตรวจสอบข้อมูลจากสลิป",
+            text: "📸 ตรวจสอบสลิป",
             weight: "bold" as const,
             color: "#ffffff",
             size: "md" as const,
+            flex: 1,
+          },
+          {
+            type: "text" as const,
+            text: "🗑️",
+            size: "md" as const,
+            align: "end" as const,
           },
         ],
       },
       body: {
         type: "box" as const,
         layout: "vertical" as const,
-        spacing: "md" as const,
+        spacing: "lg" as const,
+        paddingAll: "lg" as const,
         contents: bodyContents,
       },
       footer: {
         type: "box" as const,
-        layout: "horizontal" as const,
+        layout: "vertical" as const,
         spacing: "sm" as const,
+        paddingAll: "lg" as const,
         contents: [
           {
             type: "button" as const,
             style: "primary" as const,
-            color: headerColor,
+            color: "#22A699",
+            height: "sm" as const,
             action: {
               type: "postback" as const,
-              label: "✅ ยืนยัน",
+              label: "✓ ยืนยัน",
               data: "action=confirm_expense",
             },
-            flex: 1,
           },
           {
             type: "button" as const,
             style: "link" as const,
+            height: "sm" as const,
             action: {
               type: "postback" as const,
-              label: "❌ ยกเลิก",
+              label: "✕ ยกเลิก",
               data: "action=cancel_expense",
             },
-            flex: 1,
           },
         ],
       },
