@@ -1,26 +1,27 @@
 import { z } from "zod";
 import { Request, Response } from "express";
-// import { parseExpenseMessage } from "../services/ai";
+import { WebhookEvent, TextEventMessage, PostbackEvent } from "@line/bot-sdk";
+import {
+  lineClient,
+  replyText,
+  sendExpenseConfirmMessage,
+  formatSummaryMessage,
+  formatRecentMessage,
+  sendOcrConfirmMessage,
+} from "../services/line";
+import { parseExpenseMessage } from "../services";
 import {
   saveExpense,
   getMonthlySummary,
   getRecentExpenses,
 } from "../services/expense";
-import {
-  replyText,
-  formatSummaryMessage,
-  formatRecentMessage,
-} from "../services/line";
 import { logger } from "../utils/logger";
 import { ValidationError } from "../utils/errors";
-import { parseExpenseMessage } from "../services";
-import axios from "axios";
-import { config } from "../config";
 import { parseSlipImage } from "../services/ocr";
 import { setPending } from "../services/pendingStore";
-import { sendOcrConfirmMessage, lineClient } from "../services/line";
 import { handlePostback } from "./postback";
-import { PostbackEvent } from "@line/bot-sdk";
+import axios from "axios";
+import { config } from "../config";
 
 // Validate structure ของ LINE webhook payload
 const lineWebhookSchema = z.object({
@@ -184,15 +185,19 @@ async function processMessage(
     );
   }
 
-  await saveExpense(userId, parsed);
+  // ตอบทันทีก่อน
+  await replyText(replyToken, "⏳ กำลังเตรียมข้อมูล...");
 
-  const emoji = parsed.type === "INCOME" ? "💰" : "💸";
-  const typeText = parsed.type === "INCOME" ? "รายรับ" : "รายจ่าย";
+  // เก็บ pending รอ confirm
+  setPending(userId, { parsedExpense: parsed });
 
-  return replyText(
-    replyToken,
-    `${emoji} บันทึก${typeText}แล้วค่ะ!\n📝 ${parsed.description}\n💵 ${parsed.amount.toLocaleString()} บาท\n🏷️ ${parsed.category}`
-  );
+  // ส่ง confirm message
+  await sendExpenseConfirmMessage(userId, {
+    type: parsed.type,
+    amount: parsed.amount,
+    description: parsed.description,
+    category: parsed.category,
+  });
 }
 
 async function handleImageMessage(

@@ -2,7 +2,7 @@
  * Test สำหรับ parseExpenseMessage integration
  * Note: เนื่องจาก parseExpenseMessage ใช้ Google AI จริงและมี fallback
  * การ test แบบ unit จึงซับซ้อน - ควรทดสอบ GoogleProvider และ fallback แยก
- * 
+ *
  * Test suite นี้ทดสอบ fallback behavior เมื่อ AI fail
  */
 

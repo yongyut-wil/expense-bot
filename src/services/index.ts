@@ -15,11 +15,11 @@ function createAIProvider(): AIProvider {
   switch (provider) {
     // case "anthropic":
     //   if (!config.ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY is required");
-      // return new AnthropicProvider(config.ANTHROPIC_API_KEY);
+    // return new AnthropicProvider(config.ANTHROPIC_API_KEY);
 
     // case "openai":
     //   if (!config.OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is required");
-      // return new OpenAIProvider(config.OPENAI_API_KEY);
+    // return new OpenAIProvider(config.OPENAI_API_KEY);
 
     case "google":
       if (!config.GOOGLE_API_KEY) throw new Error("GOOGLE_API_KEY is required");
@@ -34,12 +34,14 @@ function createAIProvider(): AIProvider {
 const aiProvider = createAIProvider();
 
 // Export function เดิม — ส่วนอื่นของ codebase ไม่ต้องแก้อะไรเลย
-export async function parseExpenseMessage(text: string): Promise<ParsedExpense> {
+export async function parseExpenseMessage(
+  text: string
+): Promise<ParsedExpense> {
   try {
     return await aiProvider.parseExpense(text);
   } catch (err) {
-    logger.warn("AI provider failed, using fallback parser", { 
-      error: (err as Error).message 
+    logger.warn("AI provider failed, using fallback parser", {
+      error: (err as Error).message,
     });
     return parseFallback(text);
   }

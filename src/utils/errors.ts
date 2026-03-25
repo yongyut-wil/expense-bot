@@ -31,6 +31,10 @@ export class NotFoundError extends AppError {
 
 export class ExternalServiceError extends AppError {
   constructor(service: string, message: string) {
-    super(`${service} service error: ${message}`, 503, "EXTERNAL_SERVICE_ERROR");
+    super(
+      `${service} service error: ${message}`,
+      503,
+      "EXTERNAL_SERVICE_ERROR"
+    );
   }
 }

@@ -8,16 +8,14 @@ const envSchema = z.object({
   LINE_CHANNEL_ACCESS_TOKEN: z
     .string()
     .min(1, "LINE_CHANNEL_ACCESS_TOKEN is required"),
-  
+
   DATABASE_URL: z.string().url("DATABASE_URL must be a valid URL"),
   PORT: z.coerce.number().default(3000),
   NODE_ENV: z
     .enum(["development", "production", "test"])
     .default("development"),
 
-  AI_PROVIDER: z
-    .enum(["google", "openai"])
-    .default("google"),
+  AI_PROVIDER: z.enum(["google", "openai"]).default("google"),
 
   GOOGLE_API_KEY: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(),

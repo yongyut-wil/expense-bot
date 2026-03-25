@@ -39,9 +39,7 @@ export function errorHandler(
     error: {
       code: "INTERNAL_ERROR",
       message:
-        config.NODE_ENV === "production"
-          ? "Something went wrong"
-          : err.message,
+        config.NODE_ENV === "production" ? "Something went wrong" : err.message,
     },
   });
 }

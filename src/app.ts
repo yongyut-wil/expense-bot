@@ -36,11 +36,14 @@ export function createApp() {
   app.post(
     "/webhook",
     (req, res, next) => {
-      logger.info("🎯 POST /webhook hit", { ip: req.ip, userAgent: req.headers['user-agent'] });
+      logger.info("🎯 POST /webhook hit", {
+        ip: req.ip,
+        userAgent: req.headers["user-agent"],
+      });
       next();
     },
-    webhookLimiter,          // rate limit เฉพาะ webhook
-    verifyLineSignature,     // verify ว่ามาจาก LINE จริง
+    webhookLimiter, // rate limit เฉพาะ webhook
+    verifyLineSignature, // verify ว่ามาจาก LINE จริง
     asyncHandler(webhookHandler)
   );
 

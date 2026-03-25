@@ -23,13 +23,23 @@ import {
   formatRecentMessage,
 } from "../../services/line";
 
-const mockParseExpense = parseExpenseMessage as jest.MockedFunction<typeof parseExpenseMessage>;
+const mockParseExpense = parseExpenseMessage as jest.MockedFunction<
+  typeof parseExpenseMessage
+>;
 const mockSaveExpense = saveExpense as jest.MockedFunction<typeof saveExpense>;
-const mockGetSummary = getMonthlySummary as jest.MockedFunction<typeof getMonthlySummary>;
-const mockGetRecent = getRecentExpenses as jest.MockedFunction<typeof getRecentExpenses>;
+const mockGetSummary = getMonthlySummary as jest.MockedFunction<
+  typeof getMonthlySummary
+>;
+const mockGetRecent = getRecentExpenses as jest.MockedFunction<
+  typeof getRecentExpenses
+>;
 const mockReplyText = replyText as jest.MockedFunction<typeof replyText>;
-const mockFormatSummary = formatSummaryMessage as jest.MockedFunction<typeof formatSummaryMessage>;
-const mockFormatRecent = formatRecentMessage as jest.MockedFunction<typeof formatRecentMessage>;
+const mockFormatSummary = formatSummaryMessage as jest.MockedFunction<
+  typeof formatSummaryMessage
+>;
+const mockFormatRecent = formatRecentMessage as jest.MockedFunction<
+  typeof formatRecentMessage
+>;
 
 // Helper สร้าง mock request
 function makeRequest(text: string, userId = "U1234567890"): Partial<Request> {
@@ -236,10 +246,12 @@ describe("Webhook Handler", () => {
     it("should skip non-message events", async () => {
       const req = {
         body: {
-          events: [{ 
-            type: "follow", 
-            source: { userId: "U1234567890", type: "user" } 
-          }],
+          events: [
+            {
+              type: "follow",
+              source: { userId: "U1234567890", type: "user" },
+            },
+          ],
         },
       } as Request;
       const res = makeResponse() as Response;

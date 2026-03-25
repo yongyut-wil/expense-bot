@@ -33,7 +33,8 @@ export interface OcrResult {
 
 export interface PendingConfirmation {
   userId: string;
-  ocrResult: OcrResult;
-  imageMessageId: string;
+  ocrResult?: OcrResult;
+  parsedExpense?: ParsedExpense;
+  imageMessageId?: string;
   createdAt: Date;
 }

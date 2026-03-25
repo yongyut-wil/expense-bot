@@ -18,44 +18,44 @@ export async function handlePostback(event: PostbackEvent) {
     if (!pending) {
       return replyText(
         replyToken,
-        "หมดเวลายืนยันแล้วค่ะ (5 นาที) 😅\nลองส่งรูปใหม่อีกครั้งนะคะ"
+        "หมดเวลายืนยันแล้วค่ะ (5 นาที) 😅\nลองส่งข้อมูลใหม่อีกครั้งนะคะ"
       );
     }
 
-    if (!pending.ocrResult.amount) {
+    // รองรับทั้ง OCR และ text parsed
+    const expense = pending.ocrResult || pending.parsedExpense;
+
+    if (!expense || !expense.amount) {
       deletePending(userId);
-      return replyText(
-        replyToken,
-        "ข้อมูลไม่ครบค่ะ ลองส่งรูปใหม่อีกครั้งนะคะ 🙏"
-      );
+      return replyText(replyToken, "ข้อมูลไม่ครบค่ะ ลองส่งใหม่อีกครั้งนะคะ 🙏");
     }
 
     try {
       await saveExpense(userId, {
-        type: pending.ocrResult.type as "INCOME" | "EXPENSE",
-        amount: pending.ocrResult.amount,
-        description: pending.ocrResult.description,
-        category: pending.ocrResult.category,
+        type: expense.type as "INCOME" | "EXPENSE",
+        amount: expense.amount,
+        description: expense.description,
+        category: expense.category,
       });
 
       deletePending(userId);
 
-      logger.info("Expense confirmed from OCR", {
+      const source = pending.ocrResult ? "OCR" : "text";
+      logger.info(`Expense confirmed from ${source}`, {
         userId,
-        amount: pending.ocrResult.amount,
-        category: pending.ocrResult.category,
+        amount: expense.amount,
+        category: expense.category,
       });
 
-      const emoji = pending.ocrResult.type === "INCOME" ? "💰" : "💸";
-      const typeText =
-        pending.ocrResult.type === "INCOME" ? "รายรับ" : "รายจ่าย";
+      const emoji = expense.type === "INCOME" ? "💰" : "💸";
+      const typeText = expense.type === "INCOME" ? "รายรับ" : "รายจ่าย";
 
       return replyText(
         replyToken,
-        `${emoji} บันทึก${typeText}แล้วค่ะ!\n📝 ${pending.ocrResult.description}\n💵 ${pending.ocrResult.amount.toLocaleString()} บาท\n🏷️ ${pending.ocrResult.category}`
+        `${emoji} บันทึก${typeText}แล้วค่ะ!\n📝 ${expense.description}\n💵 ${expense.amount.toLocaleString()} บาท\n🏷️ ${expense.category}`
       );
     } catch (err) {
-      logger.error("Failed to save OCR expense", {
+      logger.error("Failed to save expense", {
         error: (err as Error).message,
       });
       return replyText(replyToken, "เกิดข้อผิดพลาด ลองใหม่อีกครั้งนะคะ 🙏");
@@ -66,7 +66,7 @@ export async function handlePostback(event: PostbackEvent) {
     deletePending(userId);
     return replyText(
       replyToken,
-      "ยกเลิกแล้วค่ะ 👌\nถ้าอยากบันทึกใหม่ ส่งรูปมาได้เลยนะคะ"
+      "ยกเลิกแล้วค่ะ 👌\nถ้าอยากบันทึกใหม่ ส่งข้อมูลมาได้เลยนะคะ"
     );
   }
 

@@ -1,4 +1,4 @@
-import { PendingConfirmation, OcrResult } from "../types";
+import { PendingConfirmation, OcrResult, ParsedExpense } from "../types";
 import { logger } from "../utils/logger";
 
 const store = new Map<string, PendingConfirmation>();
@@ -8,7 +8,9 @@ const TTL_MS = 5 * 60 * 1000;
 
 export function setPending(
   userId: string,
-  data: { ocrResult: OcrResult; imageMessageId: string }
+  data:
+    | { ocrResult: OcrResult; imageMessageId: string }
+    | { parsedExpense: ParsedExpense }
 ) {
   store.set(userId, { ...data, userId, createdAt: new Date() });
   logger.debug("Pending confirmation set", { userId });

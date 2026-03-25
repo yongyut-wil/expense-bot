@@ -9,8 +9,9 @@ const devFormat = combine(
   timestamp({ format: "HH:mm:ss" }),
   errors({ stack: true }),
   printf(({ level, message, timestamp, stack, ...meta }) => {
-    const metaStr =
-      Object.keys(meta).length ? `\n${JSON.stringify(meta, null, 2)}` : "";
+    const metaStr = Object.keys(meta).length
+      ? `\n${JSON.stringify(meta, null, 2)}`
+      : "";
     return `${timestamp} [${level}]: ${stack || message}${metaStr}`;
   })
 );

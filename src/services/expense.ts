@@ -18,10 +18,7 @@ async function getOrCreateCategory(userId: string, name: string) {
   });
 }
 
-export async function saveExpense(
-  lineUserId: string,
-  parsed: ParsedExpense
-) {
+export async function saveExpense(lineUserId: string, parsed: ParsedExpense) {
   const user = await getOrCreateUser(lineUserId);
   const category = await getOrCreateCategory(user.id, parsed.category);
 

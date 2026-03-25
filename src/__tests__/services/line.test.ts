@@ -3,7 +3,11 @@
  * ทดสอบการส่งข้อความและ format ข้อความ
  */
 
-import { replyText, formatSummaryMessage, formatRecentMessage } from "../../services/line";
+import {
+  replyText,
+  formatSummaryMessage,
+  formatRecentMessage,
+} from "../../services/line";
 import { MonthlySummary, RecentExpense } from "../../types";
 
 // Mock LINE client
@@ -25,7 +29,9 @@ describe("LINE Service", () => {
 
     it("should throw ExternalServiceError when LINE API fails", async () => {
       const { lineClient } = require("../../services/line");
-      lineClient.replyMessage = jest.fn().mockRejectedValue(new Error("API error"));
+      lineClient.replyMessage = jest
+        .fn()
+        .mockRejectedValue(new Error("API error"));
 
       await expect(replyText("test-token", "Hello")).rejects.toThrow("LINE");
     });
@@ -93,12 +99,21 @@ describe("LINE Service", () => {
 
       // ตรวจว่ามีชื่อเดือนไทย (มกราคม-ธันวาคม)
       const thaiMonths = [
-        "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน",
-        "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม",
-        "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+        "มกราคม",
+        "กุมภาพันธ์",
+        "มีนาคม",
+        "เมษายน",
+        "พฤษภาคม",
+        "มิถุนายน",
+        "กรกฎาคม",
+        "สิงหาคม",
+        "กันยายน",
+        "ตุลาคม",
+        "พฤศจิกายน",
+        "ธันวาคม",
       ];
-      
-      const hasThaiMonth = thaiMonths.some(month => message.includes(month));
+
+      const hasThaiMonth = thaiMonths.some((month) => message.includes(month));
       expect(hasThaiMonth).toBe(true);
     });
   });

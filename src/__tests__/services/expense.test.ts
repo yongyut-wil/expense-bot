@@ -169,7 +169,7 @@ describe("Expense Service", () => {
       expect(summary.totalExpense).toBe(820);
       expect(summary.balance).toBe(29180);
       expect(summary.byCategory).toHaveLength(2);
-      
+
       // หมวดอาหารรวม 620 ต้องอยู่อันดับแรก
       expect(summary.byCategory[0].category).toBe("อาหาร");
       expect(summary.byCategory[0].total).toBe(620);
