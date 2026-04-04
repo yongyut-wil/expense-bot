@@ -191,15 +191,12 @@ async function processMessage(
     );
   }
 
-  // ตอบทันทีก่อน
-  await replyText(replyToken, "⏳ กำลังเตรียมข้อมูล...");
+  // เก็บ pending รอ confirm (ใช้ messageId เป็น key)
+  setPending(messageId, userId, { parsedExpense: parsed });
 
-  // เก็บ pending รอ confirm
-  setPending(userId, { parsedExpense: parsed });
-
-  // ส่ง confirm message (พร้อม transaction ID)
+  // ส่ง confirm message (พร้อม transaction ID) - ใช้ reply แทน push
   await sendExpenseConfirmMessage(
-    userId,
+    replyToken,
     {
       type: parsed.type,
       amount: parsed.amount,
@@ -217,9 +214,6 @@ async function handleImageMessage(
 ) {
   logger.info("Received image message", { userId, messageId });
 
-  // ตอบ user ทันทีก่อนว่ากำลังอ่าน
-  await replyText(replyToken, "⏳ กำลังอ่านสลิป รอสักครู่นะคะ...");
-
   // Download รูปจาก LINE
   const imageBuffer = await downloadLineImage(messageId);
   const base64 = imageBuffer.toString("base64");
@@ -228,18 +222,17 @@ async function handleImageMessage(
   const ocrResult = await parseSlipImage(base64, "image/jpeg");
 
   if (!ocrResult.success || !ocrResult.amount) {
-    await lineClient.pushMessage(userId, {
-      type: "text",
-      text: "Expense-Botอ่านสลิปไม่ออกค่ะ 😅\nลองถ่ายใหม่ให้ชัดขึ้น หรือพิมพ์ข้อมูลเองได้เลยนะคะ",
-    });
-    return;
+    return replyText(
+      replyToken,
+      "Expense-Botอ่านสลิปไม่ออกค่ะ 😅\nลองถ่ายใหม่ให้ชัดขึ้น หรือพิมพ์ข้อมูลเองได้เลยนะคะ"
+    );
   }
 
-  // เก็บ pending รอ confirm
-  setPending(userId, { ocrResult, imageMessageId: messageId });
+  // เก็บ pending รอ confirm (ใช้ messageId เป็น key)
+  setPending(messageId, userId, { ocrResult, imageMessageId: messageId });
 
-  // ส่ง confirm message (พร้อม transaction ID)
-  await sendOcrConfirmMessage(userId, ocrResult, messageId);
+  // ส่ง confirm message (พร้อม transaction ID) - ใช้ reply แทน push
+  await sendOcrConfirmMessage(replyToken, ocrResult, messageId);
 }
 
 async function downloadLineImage(messageId: string): Promise<Buffer> {

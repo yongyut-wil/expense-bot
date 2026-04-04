@@ -7,31 +7,32 @@ const store = new Map<string, PendingConfirmation>();
 const TTL_MS = 5 * 60 * 1000;
 
 export function setPending(
+  txId: string,
   userId: string,
   data:
     | { ocrResult: OcrResult; imageMessageId: string }
     | { parsedExpense: ParsedExpense }
 ) {
-  store.set(userId, { ...data, userId, createdAt: new Date() });
-  logger.debug("Pending confirmation set", { userId });
+  store.set(txId, { ...data, userId, createdAt: new Date() });
+  logger.debug("Pending confirmation set", { txId, userId });
 }
 
-export function getPending(userId: string): PendingConfirmation | null {
-  const pending = store.get(userId);
+export function getPending(txId: string): PendingConfirmation | null {
+  const pending = store.get(txId);
   if (!pending) return null;
 
   if (Date.now() - pending.createdAt.getTime() > TTL_MS) {
-    store.delete(userId);
-    logger.debug("Pending confirmation expired", { userId });
+    store.delete(txId);
+    logger.debug("Pending confirmation expired", { txId });
     return null;
   }
 
   return pending;
 }
 
-export function deletePending(userId: string) {
-  store.delete(userId);
-  logger.debug("Pending confirmation deleted", { userId });
+export function deletePending(txId: string) {
+  store.delete(txId);
+  logger.debug("Pending confirmation deleted", { txId });
 }
 
 // Cleanup ทุก 10 นาที ป้องกัน memory leak
@@ -39,9 +40,9 @@ setInterval(
   () => {
     const now = Date.now();
     let cleaned = 0;
-    for (const [userId, pending] of store.entries()) {
+    for (const [txId, pending] of store.entries()) {
       if (now - pending.createdAt.getTime() > TTL_MS) {
-        store.delete(userId);
+        store.delete(txId);
         cleaned++;
       }
     }

@@ -4,13 +4,17 @@ LINE Bot สำหรับบันทึกรายรับ-รายจ่�
 
 ## ✨ Features
 
-- 🤖 **AI-Powered Parsing** - ใช้ Google Gemini แปลงข้อความธรรมดาเป็นรายการรับ-จ่าย
-- 💬 **LINE Integration** - รับ-ส่งข้อความผ่าน LINE Bot
+- 🤖 **AI-Powered Parsing** - ใช้ Google Gemini แปลงข้อความธรรมดาเป็นรายการรับ-จ่าย พร้อม prompt ที่ปรับปรุงใหม่
+- ✅ **Confirmation Flow** - ยืนยันก่อนบันทึก ทั้งข้อความพิมพ์และสลิปภาพ ป้องกันการบันทึกผิดพลาด
+- 🎨 **Modern UI** - Flex Message ดีไซน์ใหม่สวยงาม มี badges, ยอดเงินขนาดใหญ่, และ layout ที่ทันสมัย
+- � **OCR Support** - อ่านสลิปภาพอัตโนมัติด้วย Google Gemini Vision พร้อมแสดงความแม่นยำ
+- �💬 **LINE Integration** - รับ-ส่งข้อความผ่าน LINE Bot พร้อม Rich Messages
 - 📊 **สรุปรายเดือน** - ดูสรุปรายรับ-รายจ่ายแยกตามหมวดหมู่
-- 🏷️ **จัดหมวดหมู่อัตโนมัติ** - AI จัดหมวดหมู่รายการให้อัตโนมัติ
+- 🏷️ **จัดหมวดหมู่อัตโนมัติ** - AI จัดหมวดหมู่รายการให้อัตโนมัติ รองรับการศึกษา, อาหาร, เดินทาง และอื่นๆ
 - 🔒 **Secure** - มี signature verification, rate limiting, และ security headers
 - 📈 **Database** - เก็บข้อมูลใน PostgreSQL ด้วย Prisma ORM
 - 🎯 **Fallback Parser** - มี regex parser สำรองเมื่อ AI ไม่ทำงาน
+- ⏱️ **Pending System** - ระบบรอยืนยัน 5 นาที พร้อมป้องกันการกดซ้ำ
 - 🐳 **Docker Support** - รันง่ายด้วย Docker และ Docker Compose
 
 ## 🛠️ Tech Stack
@@ -109,23 +113,28 @@ docker-compose logs -f
 - [🏗️ Architecture](./docs/ARCHITECTURE.md) - อธิบายสถาปัตยกรรมระบบ
 - [🎓 Workshop Guide](./docs/WORKSHOP.md) - คู่มือสอนแบบ hands-on
 - [🐳 Docker Guide](./docs/DOCKER.md) - คู่มือการใช้งาน Docker
+- [🧪 Testing Guide](./docs/TESTING_GUIDE.md) - คู่มือการเขียน Tests
+- [📊 Test Coverage Report](./docs/TEST_COVERAGE.md) - รายงาน Test Coverage
 
 ## 💬 การใช้งาน
 
 ### บันทึกรายจ่าย
-```
+
+```text
 กินข้าว 120
 ค่ารถ BTS 44 บาท
 ช้อปปิ้ง 500
 ```
 
 ### บันทึกรายรับ
-```
+
+```text
 รับเงินเดือน 30000
 ได้โบนัส 5000 บาท
 ```
 
 ### คำสั่งพิเศษ
+
 - `สรุป` - ดูสรุปรายรับ-รายจ่ายเดือนนี้
 - `ล่าสุด` - ดู 5 รายการล่าสุด
 - `วิธีใช้` - ดูคำแนะนำการใช้งาน
@@ -218,13 +227,17 @@ NODE_ENV=development
 - **Database Abstraction** - Prisma ORM + type-safe queries
 - **Container Ready** - Dockerfile และ docker-compose สำหรับ production
 
-## 📝 License
+## � License
 
-ISC
+MIT License - see [LICENSE](./LICENSE) file for details.
 
-## 👨‍💻 Author
+```text
+Copyright (c) 2026 Expense Bot Contributors
+```
 
-Your Name
+---
+
+Built with ❤️ for expense tracking enthusiasts
 
 ---
 

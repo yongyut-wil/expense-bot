@@ -1,0 +1,54 @@
+# Node
+node_modules
+npm-debug.log
+yarn-error.log
+
+# TypeScript
+dist
+*.tsbuildinfo
+
+# Tests
+coverage
+*.test.ts
+*.spec.ts
+__tests__
+src/__tests__
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Logs
+logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation (ไม่จำเป็นใน container)
+docs
+*.md
+!README.md
+
+# CI/CD
+.github
+.gitlab-ci.yml
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore

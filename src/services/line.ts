@@ -196,7 +196,7 @@ export async function sendExpenseSuccessMessage(
 }
 
 export async function sendExpenseConfirmMessage(
-  userId: string,
+  replyToken: string,
   expense: {
     type: string;
     amount: number;
@@ -396,7 +396,7 @@ export async function sendExpenseConfirmMessage(
             action: {
               type: "postback" as const,
               label: "✓ ยืนยัน",
-              data: `action=confirm_expense&type=${expense.type}&amount=${expense.amount}&description=${encodeURIComponent(expense.description)}&category=${encodeURIComponent(expense.category)}&txId=${transactionId}`,
+              data: `action=confirm_expense&txId=${transactionId}`,
             },
           },
           {
@@ -415,8 +415,8 @@ export async function sendExpenseConfirmMessage(
   };
 
   try {
-    await lineClient.pushMessage(userId, flexMessage);
-    logger.debug("Expense confirm message sent", { userId });
+    await lineClient.replyMessage(replyToken, flexMessage);
+    logger.debug("Expense confirm message sent", { replyToken });
   } catch (err) {
     const errorResponse = (err as any)?.response;
     const errorDetails = {
@@ -435,7 +435,7 @@ export async function sendExpenseConfirmMessage(
 }
 
 export async function sendOcrConfirmMessage(
-  userId: string,
+  replyToken: string,
   ocr: OcrResult,
   transactionId: string
 ): Promise<void> {
@@ -697,7 +697,7 @@ export async function sendOcrConfirmMessage(
             action: {
               type: "postback" as const,
               label: "✓ ยืนยัน",
-              data: `action=confirm_expense&type=${ocr.type}&amount=${ocr.amount}&description=${encodeURIComponent(ocr.description)}&category=${encodeURIComponent(ocr.category)}&txId=${transactionId}`,
+              data: `action=confirm_expense&txId=${transactionId}`,
             },
           },
           {
@@ -717,12 +717,12 @@ export async function sendOcrConfirmMessage(
 
   try {
     logger.debug("Sending Flex Message", {
-      userId,
+      replyToken,
       payload: JSON.stringify(flexMessage).substring(0, 500),
     });
 
-    await lineClient.pushMessage(userId, flexMessage);
-    logger.debug("OCR confirm message sent", { userId });
+    await lineClient.replyMessage(replyToken, flexMessage);
+    logger.debug("OCR confirm message sent", { replyToken });
   } catch (err) {
     const errorResponse = (err as any)?.response;
     const errorDetails = {

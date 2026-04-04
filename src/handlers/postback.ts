@@ -17,15 +17,9 @@ export async function handlePostback(event: PostbackEvent) {
   logger.info("Postback received", { userId, action });
 
   if (action === "confirm_expense") {
-    // อ่านข้อมูลจาก postback data แทน in-memory store
-    const type = params.get("type");
-    const amountStr = params.get("amount");
-    const description = params.get("description");
-    const category = params.get("category");
     const txId = params.get("txId");
 
-    // Validate ข้อมูล
-    if (!type || !amountStr || !description || !category || !txId) {
+    if (!txId) {
       return replyText(replyToken, "ข้อมูลไม่ครบค่ะ ลองส่งใหม่อีกครั้งนะคะ 🙏");
     }
 
@@ -38,40 +32,58 @@ export async function handlePostback(event: PostbackEvent) {
       );
     }
 
-    const amount = parseFloat(amountStr);
-    if (isNaN(amount) || amount <= 0) {
+    // ดึงข้อมูลจาก pendingStore
+    const pending = getPending(txId);
+    if (!pending) {
       return replyText(
         replyToken,
-        "จำนวนเงินไม่ถูกต้องค่ะ ลองส่งใหม่อีกครั้งนะคะ 🙏"
+        "รายการนี้หมดอายุแล้วค่ะ ลองส่งใหม่อีกครั้งนะคะ 🙏"
       );
+    }
+
+    // ดึงข้อมูล expense จาก pending
+    const expense = pending.parsedExpense || {
+      type: pending.ocrResult?.type,
+      amount: pending.ocrResult?.amount,
+      description: pending.ocrResult?.description,
+      category: pending.ocrResult?.category,
+    };
+
+    if (
+      !expense.type ||
+      !expense.amount ||
+      !expense.description ||
+      !expense.category
+    ) {
+      return replyText(replyToken, "ข้อมูลไม่ครบค่ะ ลองส่งใหม่อีกครั้งนะคะ 🙏");
     }
 
     try {
       await saveExpense(userId, {
-        type: type as "INCOME" | "EXPENSE",
-        amount,
-        description: decodeURIComponent(description),
-        category: decodeURIComponent(category),
+        type: expense.type as "INCOME" | "EXPENSE",
+        amount: expense.amount,
+        description: expense.description,
+        category: expense.category,
       });
 
       // Mark transaction เป็น processed
       markTransactionProcessed(txId);
 
-      // ลบ pending ถ้ามี (สำหรับกรณี OCR)
-      deletePending(userId);
+      // ลบ pending
+      deletePending(txId);
 
       logger.info("Expense confirmed from postback", {
         userId,
-        amount,
-        category: decodeURIComponent(category),
+        amount: expense.amount,
+        category: expense.category,
         txId,
       });
 
       return sendExpenseSuccessMessage(replyToken, {
-        type,
-        amount,
-        description: decodeURIComponent(description),
-        category: decodeURIComponent(category),
+        type: expense.type,
+        amount: expense.amount,
+        description: expense.description,
+        category: expense.category,
       });
     } catch (err) {
       logger.error("Failed to save expense", {

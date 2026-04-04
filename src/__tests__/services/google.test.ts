@@ -117,7 +117,7 @@ describe("Google AI Provider", () => {
       );
     });
 
-    it("should use gemini-1.5-pro model", async () => {
+    it("should use gemini-2.5-flash model", async () => {
       const mockGetModel = jest.fn().mockReturnValue({
         generateContent: mockGenerateContent,
       });
